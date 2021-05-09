@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::option::Option::Some;
 
 pub struct List<T> {
     head: Link<T>,
@@ -31,6 +32,20 @@ impl<T> List<T> {
 
     pub fn iter(&self) -> Iter<T> {
         Iter { next: self.head.as_deref() }
+    }
+}
+
+impl<T> Drop for List<T> {
+    fn drop(&mut self) {
+        let mut head = self.head.take();
+
+        while let Some(node) = head {
+            if let Ok(mut node) = Rc::try_unwrap(node) {
+                head = node.next.take();
+            } else {
+                break;
+            }
+        }
     }
 }
 
